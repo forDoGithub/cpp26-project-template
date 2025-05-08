@@ -42,6 +42,12 @@ if exist "%ProgramFiles(x86)%\Microsoft Visual Studio\2019\Professional\VC\Auxil
 if exist "%ProgramFiles(x86)%\Microsoft Visual Studio\2019\Enterprise\VC\Auxiliary\Build\vcvarsall.bat" set "VS_FOUND=1"
 
 if "%VS_FOUND%"=="0" (
+    echo Setting up Visual Studio environment...
+    call scripts\setup\setup_vs_env.bat
+    set "VS_FOUND=1"
+)
+
+if "%VS_FOUND%"=="0" (    
     echo WARNING: Visual Studio with C++ workload not found.
     echo Some tests requiring Visual Studio environment might fail.
     echo.
