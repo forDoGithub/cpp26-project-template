@@ -47,38 +47,57 @@ echo. >> test.cpp
 echo     return 0; >> test.cpp
 echo } >> test.cpp
 
-echo Compiling with clang++...
-
-:: Try compiling with clang++
-clang++ -std=c++2c test.cpp -o test_cpp26.exe
-
-if %ERRORLEVEL% NEQ 0 (
-    echo Compilation failed, trying with libc++...
-    clang++ -std=c++2c -stdlib=libc++ test.cpp -o test_cpp26.exe
-    
-    if %ERRORLEVEL% NEQ 0 (
-        echo ERROR: Compilation failed. C++26 features may not be supported.
-        cd "%~dp0"
-        exit /b 1
-    )
-)
-
-echo Running the C++26 test...
-test_cpp26.exe
+:: Try a direct compilation approach using Clang in two steps
+echo Compiling with clang++ (compile-only)...
+"C:\Program Files\LLVM\bin\clang++.exe" -c test.cpp -o test.obj -std=c++2c
 
 if %ERRORLEVEL% NEQ 0 (
-    echo ERROR: Program execution failed.
+    echo ERROR: Compilation failed.
     cd "%~dp0"
     exit /b 1
 )
 
-echo.
-echo ===================================
-echo C++26 Test Successful!
-echo ===================================
-echo.
-echo Your C++26 compiler is working correctly!
-echo.
+:: Check if link.exe is available and use it directly
+echo Linking with link.exe...
+where link.exe >nul 2>&1
+if %ERRORLEVEL% EQU 0 (
+    link.exe test.obj -out:test_cpp26.exe -defaultlib:libcmt -defaultlib:oldnames -nologo
+    
+    if %ERRORLEVEL% EQU 0 (
+        echo Compilation and linking successful!
+        test_cpp26.exe
+        if %ERRORLEVEL% EQU 0 (
+            echo.
+            echo ===================================
+            echo C++26 Test Successful!
+            echo ===================================
+            echo.
+            cd "%~dp0"
+            exit /b 0
+        )
+    )
+)
 
+:: Try with a fallback approach - clang as compiler, cl as linker
+echo Trying fallback approach with CL as linker...
+"C:\Program Files\LLVM\bin\clang-cl.exe" /c test.cpp
+cl.exe test.obj /link /out:test_cpp26.exe
+
+if %ERRORLEVEL% EQU 0 (
+    echo Compilation and linking successful!
+    test_cpp26.exe
+    if %ERRORLEVEL% EQU 0 (
+        echo.
+        echo ===================================
+        echo C++26 Test Successful!
+        echo ===================================
+        echo.
+        cd "%~dp0"
+        exit /b 0
+    )
+)
+
+echo ERROR: Compilation failed. C++26 features may not be supported.
+echo Please check your Clang installation and C++26 support.
 cd "%~dp0"
-exit /b 0 
+exit /b 1
