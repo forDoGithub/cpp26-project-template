@@ -1,0 +1,10 @@
+{
+  "project_name": "Cpp26Project",
+  "cpp_version": "26",
+  "llvm_version": "20.1.4",
+  "cmake_version": "3.27.8",
+  "vcpkg_commit": "2023.10.19",
+  "setup_date": "Wed 05/07/2025",
+  "hot_reload_enabled": true,
+  "modules_enabled": true
+}
