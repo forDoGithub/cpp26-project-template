@@ -63,6 +63,12 @@ public:
      * @return A vector of feature names
      */
     static std::vector<std::string> getDetectedFeatures();
+
+  /**
+   * @brief Demonstrate the use of std::expected if available
+   * @return A string describing the outcome of the demonstration
+   */
+  static std::string demonstrateExpected();
 };
 
 } // namespace cpp26 

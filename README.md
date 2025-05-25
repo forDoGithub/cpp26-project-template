@@ -101,6 +101,7 @@ This template tests and supports various C++26 features:
 
 - **`std::print`** and **`std::println`** for formatted output
 - **`std::spanstream`** for I/O operations on spans
+- **`std::expected`** for representing operations that can return a value or an error
 - **Other C++26 features** as they become available
 
 ## Customization

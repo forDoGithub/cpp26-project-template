@@ -48,6 +48,25 @@ void test_spanstream_feature() {
 #endif
 }
 
+// Test std::expected functionality
+void test_expected_feature() {
+    const auto result = cpp26::Features::demonstrateExpected();
+    ASSERT(!result.empty());
+
+#if HAS_EXPECTED
+    std::cout << "std::expected is available, performing additional checks...\n";
+    ASSERT(result.find("std::expected is available.") != std::string::npos);
+    ASSERT(result.find("Successful operation returned:") != std::string::npos);
+    ASSERT(result.find("Failed operation returned error:") != std::string::npos);
+    // Specific values from demonstrateExpected implementation
+    ASSERT(result.find("42") != std::string::npos); 
+    ASSERT(result.find("Simulated error") != std::string::npos);
+#else
+    std::cout << "std::expected is not available, checking for unavailability message...\n";
+    ASSERT(result.find("std::expected is not available.") != std::string::npos);
+#endif
+}
+
 int main() {
     std::cout << "==================================\n";
     std::cout << "Running C++26 Features Tests\n";
@@ -56,6 +75,7 @@ int main() {
     TEST_CASE(test_feature_detection);
     TEST_CASE(test_print_feature);
     TEST_CASE(test_spanstream_feature);
+    TEST_CASE(test_expected_feature);
     
     std::cout << "All tests passed successfully!\n";
     return 0;

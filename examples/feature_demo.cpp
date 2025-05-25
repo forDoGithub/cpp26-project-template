@@ -26,6 +26,13 @@
 #define HAS_SPANSTREAM 0
 #endif
 
+#if __has_include(<expected>)
+#include <expected>
+#define HAS_EXPECTED 1
+#else
+#define HAS_EXPECTED 0
+#endif
+
 int main() {
     std::cout << "C++26 Feature Demonstration\n";
     std::cout << "===========================\n\n";
@@ -74,6 +81,33 @@ int main() {
         std::cout << "  - Read from span: " << i << ", " << d << ", " << s << "\n";
     #else
         std::cout << "  - std::spanstream is not available\n";
+    #endif
+    std::cout << "\n";
+
+    // 3. std::expected
+    std::cout << "3. std::expected Feature:\n";
+    #if HAS_EXPECTED
+        // Helper function (can be a lambda or local static function)
+        auto divide = [](int a, int b) -> std::expected<double, std::string> {
+            if (b == 0) {
+                return std::unexpected("Division by zero!");
+            }
+            return static_cast<double>(a) / b;
+        };
+
+        std::cout << "  - Demonstrating std::expected:\n";
+        
+        auto result1 = divide(10, 2);
+        if (result1.has_value()) {
+            std::cout << "    10 / 2 = " << result1.value() << "\n";
+        }
+
+        auto result2 = divide(10, 0);
+        if (!result2.has_value()) {
+            std::cout << "    10 / 0 Error: " << result2.error() << "\n";
+        }
+    #else
+        std::cout << "  - std::expected is not available\n";
     #endif
     std::cout << "\n";
 

@@ -1,6 +1,8 @@
 #include "cpp26_features.h"
 #include <iostream>
 #include <sstream>
+#include <string>
+#include <vector> // Already included but good to ensure
 
 #ifdef __clang__
 #define COMPILER_NAME "Clang"
@@ -57,14 +59,18 @@ void Features::demonstratePrint(const std::string& text, int value) {
 
 std::string Features::demonstrateSpanstream(const std::string& data) {
 #if HAS_SPANSTREAM
-    char buffer[256] = {};
-    std::span my_span(buffer);
+    const std::string prefix = "Spanstream demo: ";
+    // Allocate buffer for prefix, data, and a potential null terminator.
+    std::vector<char> buffer(prefix.length() + data.length() + 1); 
+
+    std::span<char> my_span(buffer.data(), buffer.size());
     
-    // Write to the span
     std::ospanstream oss(my_span);
-    oss << "Spanstream demo: " << data;
+    oss << prefix << data;
     
-    return std::string(buffer);
+    // oss.str() returns a span of the characters actually written.
+    std::span<char> written_span = oss.str();
+    return std::string(written_span.data(), written_span.size());
 #else
     return "std::spanstream is not available. Input data: " + data;
 #endif
@@ -86,6 +92,42 @@ std::vector<std::string> Features::getDetectedFeatures() {
 #endif
 
     return features;
+}
+
+std::string Features::demonstrateExpected() {
+    std::ostringstream oss;
+#ifdef HAS_EXPECTED
+    oss << "std::expected is available.\n";
+
+    // Helper function
+    auto operation = [](bool succeed) -> std::expected<int, std::string> {
+        if (succeed) {
+            return 42; // Success
+        } else {
+            return std::unexpected("Simulated error"); // Failure
+        }
+    };
+
+    // Demonstrate success
+    auto success_result = operation(true);
+    if (success_result.has_value()) {
+        oss << "Successful operation returned: " << success_result.value() << "\n";
+    } else {
+        oss << "Successful operation failed unexpectedly: " << success_result.error() << "\n";
+    }
+
+    // Demonstrate failure
+    auto failure_result = operation(false);
+    if (!failure_result.has_value()) {
+        oss << "Failed operation returned error: " << failure_result.error() << "\n";
+    } else {
+        oss << "Failed operation succeeded unexpectedly: " << failure_result.value() << "\n";
+    }
+
+#else
+    oss << "std::expected is not available.\n";
+#endif
+    return oss.str();
 }
 
 } // namespace cpp26 

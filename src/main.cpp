@@ -21,6 +21,11 @@ int main() {
     const auto result = cpp26::Features::demonstrateSpanstream("C++26 is awesome");
     std::cout << result << "\n\n";
 
+    // Demonstrate std::expected if available
+    std::cout << "Demonstrating std::expected functionality:\n";
+    const auto expected_result = cpp26::Features::demonstrateExpected();
+    std::cout << expected_result << "\n\n";
+
     // Success message
     std::cout << "===================================\n";
     std::cout << "Demo completed successfully!\n";
