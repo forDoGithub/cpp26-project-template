@@ -44,6 +44,10 @@ set "DOWNLOAD_DIR=%ROOT_DIR%downloads"
 set "VCPKG_DIR=%DEPS_DIR%\vcpkg"
 set "CONFIG_FILE=%ROOT_DIR%config.json"
 
+:: IMPORTANT: The version constants defined below are the source of truth for this setup script.
+:: They are used to call the individual installer scripts and to generate the config.json file.
+:: This script DOES NOT currently read versions from config.json to drive the setup process.
+:: To change tool versions, modify them here and re-run setup.bat.
 :: Define version constants
 set "PROJECT_NAME=Cpp26Project"
 set "CPP_VERSION=26"
