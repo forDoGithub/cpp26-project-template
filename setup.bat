@@ -43,17 +43,10 @@ set "BUILD_DIR=%ROOT_DIR%build"
 set "DOWNLOAD_DIR=%ROOT_DIR%downloads"
 set "VCPKG_DIR=%DEPS_DIR%\vcpkg"
 set "CONFIG_FILE=%ROOT_DIR%config.json"
+set "READ_CONFIG_SCRIPT=%SCRIPTS_DIR%\utils\read_config.ps1"
 
-:: IMPORTANT: The version constants defined below are the source of truth for this setup script.
-:: They are used to call the individual installer scripts and to generate the config.json file.
-:: This script DOES NOT currently read versions from config.json to drive the setup process.
-:: To change tool versions, modify them here and re-run setup.bat.
-:: Define version constants
-set "PROJECT_NAME=Cpp26Project"
-set "CPP_VERSION=26"
-set "LLVM_VERSION=20.1.4"
-set "CMAKE_VERSION=3.27.8"
-set "VCPKG_COMMIT=2023.10.19"
+:: Configuration is now loaded from config.json via read_config.ps1
+:: If config.json does not exist, a default one is created.
 
 :: ======== Create Directories ========
 call :print_blue "Creating directories..."
@@ -72,16 +65,52 @@ if errorlevel 1 (
     exit /b 1
 )
 
-:: ======== Create Configuration File ========
-call :print_blue "Creating configuration file..."
-call "%SETUP_SCRIPTS_DIR%\create_config.bat" "%CONFIG_FILE%" "%PROJECT_NAME%" "%CPP_VERSION%" "%LLVM_VERSION%" "%CMAKE_VERSION%" "%VCPKG_COMMIT%"
+:: ======== Load Configuration ========
+:: Check if config.json exists. If not, create a default one.
+if not exist "%CONFIG_FILE%" (
+    call :print_yellow "Configuration file (%CONFIG_FILE%) not found. Creating default configuration..."
+    call "%SETUP_SCRIPTS_DIR%\create_config.bat" "%CONFIG_FILE%"
+    if errorlevel 1 (
+        call :print_red "Error: Failed to create default configuration file."
+        pause
+        exit /b 1
+    )
+)
+
+:: Read configuration from config.json using PowerShell script
+call :print_blue "Loading configuration from %CONFIG_FILE%..."
+set "TEMP_CONFIG_LOADER=%TEMP%\load_config_vars.bat"
+if exist "%TEMP_CONFIG_LOADER%" del "%TEMP_CONFIG_LOADER%"
+
+powershell -ExecutionPolicy Bypass -NoProfile -File "%READ_CONFIG_SCRIPT%" "%CONFIG_FILE%" > "%TEMP_CONFIG_LOADER%"
+
 if errorlevel 1 (
-    call :print_red "Error: Failed to create configuration file."
+    call :print_red "Error: Failed to execute read_config.ps1. PowerShell might not be available or script failed."
+    if exist "%TEMP_CONFIG_LOADER%" del "%TEMP_CONFIG_LOADER%"
     pause
     exit /b 1
 )
 
-:: ======== Install Required Tools ========
+if not exist "%TEMP_CONFIG_LOADER%" (
+    call :print_red "Error: read_config.ps1 did not produce an output file."
+    pause
+    exit /b 1
+)
+
+call "%TEMP_CONFIG_LOADER%"
+del "%TEMP_CONFIG_LOADER%"
+
+:: Verify a key variable was set to ensure config loading was successful
+if not defined CONFIG_LLVM_VERSION (
+    call :print_red "Error: Failed to load configuration variables from %CONFIG_FILE%."
+    call :print_red "The file might be empty or severely malformed, or read_config.ps1 failed silently."
+    pause
+    exit /b 1
+)
+call :print_green "Configuration loaded successfully."
+echo.
+
+:: ======== Install Required Tools (using loaded configuration) ========
 call :print_blue "Installing Git..."
 call "%INSTALL_SCRIPTS_DIR%\install_git.bat" "%DOWNLOAD_DIR%"
 if errorlevel 1 (
@@ -91,7 +120,7 @@ if errorlevel 1 (
 )
 
 call :print_blue "Installing CMake..."
-call "%INSTALL_SCRIPTS_DIR%\install_cmake.bat" "%DOWNLOAD_DIR%" "%CMAKE_VERSION%"
+call "%INSTALL_SCRIPTS_DIR%\install_cmake.bat" "%DOWNLOAD_DIR%" "%CONFIG_CMAKE_VERSION%"
 if errorlevel 1 (
     call :print_red "Error: Failed to install CMake."
     pause
@@ -115,7 +144,7 @@ if errorlevel 1 (
 )
 
 call :print_blue "Installing LLVM/Clang..."
-call "%INSTALL_SCRIPTS_DIR%\install_llvm.bat" "%DOWNLOAD_DIR%" "%LLVM_VERSION%"
+call "%INSTALL_SCRIPTS_DIR%\install_llvm.bat" "%DOWNLOAD_DIR%" "%CONFIG_LLVM_VERSION%"
 if errorlevel 1 (
     call :print_red "Error: Failed to install LLVM/Clang."
     pause
@@ -150,7 +179,7 @@ if not defined VS_ENV_FILE (
 
 :: ======== Setup vcpkg ========
 call :print_blue "Setting up vcpkg..."
-call "%SETUP_SCRIPTS_DIR%\setup_vcpkg.bat" "%ROOT_DIR%" "%VCPKG_DIR%" "%VCPKG_COMMIT%"
+call "%SETUP_SCRIPTS_DIR%\setup_vcpkg.bat" "%ROOT_DIR%" "%VCPKG_DIR%" "%CONFIG_VCPKG_COMMIT%"
 if errorlevel 1 (
     call :print_red "Error: Failed to set up vcpkg."
     pause
@@ -178,12 +207,15 @@ call :print_green "=========================================================="
 call :print_green "C++26 Development Environment Setup Complete!"
 call :print_green "=========================================================="
 echo.
-echo Project configuration:
-echo   - Project name: %PROJECT_NAME%
-echo   - C++ version: %CPP_VERSION%
-echo   - LLVM version: %LLVM_VERSION%
-echo   - CMake version: %CMAKE_VERSION%
-echo   - vcpkg commit: %VCPKG_COMMIT%
+echo Project configuration (from %CONFIG_FILE%):
+echo   - Project name: %CONFIG_PROJECT_NAME%
+echo   - C++ version: %CONFIG_CPP_VERSION%
+echo   - LLVM version: %CONFIG_LLVM_VERSION%
+echo   - CMake version: %CONFIG_CMAKE_VERSION%
+echo   - vcpkg commit: %CONFIG_VCPKG_COMMIT%
+echo   - Hot Reload Enabled: %CONFIG_HOT_RELOAD_ENABLED%
+echo   - Modules Enabled: %CONFIG_MODULES_ENABLED%
+echo   - Setup Date: %CONFIG_SETUP_DATE%
 echo.
 echo Directories:
 echo   - Root: %ROOT_DIR%

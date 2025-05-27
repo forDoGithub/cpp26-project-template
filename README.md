@@ -95,6 +95,22 @@ cmake .. -G "Ninja" -DCMAKE_CXX_COMPILER=clang++
 ninja
 ```
 
+## Configuration (`config.json`)
+
+The setup process is configured through the `config.json` file located in the root of the repository. When you run `setup.bat` for the first time, if `config.json` is missing, a default version of this file will be created with standard settings.
+
+You can customize the following settings by editing `config.json` *before* running `setup.bat`:
+
+-   `project_name`: Your desired project name (Default: "Cpp26Project").
+-   `cpp_version`: The C++ version (Default: "26").
+-   `llvm_version`: The LLVM/Clang version to install (Default: "20.1.4").
+-   `cmake_version`: The CMake version to install (Default: "3.27.8").
+-   `vcpkg_commit`: The commit hash for vcpkg to checkout (Default: "2023.10.19").
+-   `hot_reload_enabled`: `true` or `false` (Default: `true`, currently informational).
+-   `modules_enabled`: `true` or `false` (Default: `true`, currently informational).
+
+If you modify `config.json` after an initial setup, re-running `setup.bat` will attempt to apply the new configuration. The script will use the versions specified in `config.json` to guide the installation of tools.
+
 ## C++26 Features
 
 This template tests and supports various C++26 features:
@@ -121,9 +137,11 @@ To customize this template for your own project:
 
 ## Version Information
 
-- **Clang**: 20.1.4 (default)
-- **CMake**: 3.27.8 (default)
-- **Ninja**: Latest available
+Default versions (configurable in `config.json`):
+- **Clang**: 20.1.4
+- **CMake**: 3.27.8
+- **Ninja**: Latest available (installed directly, not versioned in `config.json`)
+- **vcpkg commit hash**: See `config.json`
 
 ## Tools and Libraries
 
