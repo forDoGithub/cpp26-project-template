@@ -6,7 +6,8 @@ add_executable(features_test
 )
 
 # Link to the main library
-target_link_libraries(features_test PRIVATE ${PROJECT_NAME}_lib)
+target_link_libraries(features_test PRIVATE cpp26_features_lib)
+set_target_properties(features_test PROPERTIES FOLDER "Tests")
 
 # Add test
 add_test(

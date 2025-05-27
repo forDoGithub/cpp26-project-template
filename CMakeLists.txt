@@ -12,6 +12,13 @@ set(CMAKE_CXX_STANDARD 26)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
+# Compiler warning flags
+if(CMAKE_CXX_COMPILER_ID MATCHES "Clang" OR CMAKE_CXX_COMPILER_ID MATCHES "GNU")
+    add_compile_options(-Wall -Wextra -pedantic)
+elseif(CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
+    add_compile_options(/W4)
+endif()
+
 # Use folders in IDE solutions
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 
@@ -35,15 +42,22 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 
-# Simple example executable to test C++26 features
-add_executable(cpp26_test src/cpp26_test.cpp)
+# Core C++26 Features Library
+add_library(cpp26_features_lib STATIC 
+    src/cpp26_features.cpp
+    # include/cpp26_features.h # Headers are included via target_include_directories
+)
+target_include_directories(cpp26_features_lib PUBLIC ${PROJECT_SOURCE_DIR}/include)
+set_target_properties(cpp26_features_lib PROPERTIES FOLDER "Libraries")
+
+# Main Application
+add_executable(cpp26_main_app src/main.cpp)
+target_link_libraries(cpp26_main_app PRIVATE cpp26_features_lib)
+set_target_properties(cpp26_main_app PROPERTIES FOLDER "Applications")
 
 # Display compiler information
 message(STATUS "C++ compiler: ${CMAKE_CXX_COMPILER_ID} ${CMAKE_CXX_COMPILER_VERSION}")
 message(STATUS "C++ standard: C++26")
-
-# Include directories
-include_directories(${PROJECT_SOURCE_DIR}/include)
 
 # Print configuration summary
 message(STATUS "")
@@ -54,3 +68,7 @@ message(STATUS "Compiler:                ${CMAKE_CXX_COMPILER_ID} ${CMAKE_CXX_CO
 message(STATUS "Install prefix:          ${CMAKE_INSTALL_PREFIX}")
 message(STATUS "======================================================")
 message(STATUS "") 
+
+# Add subdirectories for examples and tests
+add_subdirectory(examples)
+add_subdirectory(tests)
